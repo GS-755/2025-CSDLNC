@@ -177,10 +177,52 @@ BEGIN
 	INSERT INTO TAG
 	VALUES (@name);
 END;
-
-CREATE PROC RemoveTag @id INT
+-- Procedure xóa Tag 
+-- Seeding table 
+CREATE TABLE LOG_DELETEJOIN_LISTTAGBOOK (
+	numOrder INT IDENTITY(1, 1) PRIMARY KEY, 
+	idBook CHAR(4) NOT NULL,
+	idTag INT NOT NULL,
+	dateDeleted DATE DEFAULT GETDATE()
+);
+CREATE TABLE LOG_DELETETAG (
+	numOrder INT IDENTITY(1, 1) PRIMARY KEY, 
+	idTag INT NOT NULL,
+	nameTag NVARCHAR(30) NOT NULL, 
+	dateDeleted DATE DEFAULT GETDATE()
+);
+-- Mô tả: 
+-- 1. Query dữ liệu của JOIN_LISTTAGBOOK có tồn tại idTag = @id, sau đó xóa và ghi log các dữ liệu tìm được
+-- 2. Ghi log dữ liệu Tag đã xóa và xóa dữ liệu có Tag.idTag = @id 
+CREATE OR ALTER PROC RemoveTag @id INT
 AS
 BEGIN
+	IF NOT EXISTS (
+		SELECT * 
+		FROM Tag 
+		WHERE idTag = @id
+	) BEGIN 
+		Raiserror(N'Queried idTag does not exqist!', 16, 1);
+		RETURN;
+	END;
+	DECLARE @cnt_joinlst INT; 
+	SELECT @cnt_joinlst = (
+		SELECT COUNT(idTag) 
+		FROM JOIN_LISTTAGBOOK
+		WHERE idTag = @id 
+	);
+	IF(@cnt_joinlst > 0) BEGIN 
+		INSERT INTO LOG_DELETEJOIN_LISTTAGBOOK(idBook, idTag)
+			SELECT idBook, idTag 
+			FROM JOIN_LISTTAGBOOK 
+			WHERE idTag = @id; 
+		DELETE FROM JOIN_LISTTAGBOOK
+			WHERE idTag = @id;
+	END;
+	INSERT INTO LOG_DELETETAG(idTag, nameTag) 
+		SELECT idTag, nameTag 
+		FROM Tag 
+		WHERE idTag = @id;
 	DELETE FROM TAG
 	WHERE idTag = @id;
 END;
