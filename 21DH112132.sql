@@ -1,3 +1,5 @@
+-- 20250729 0738
+-- OK
 CREATE OR ALTER PROC ThongKeSoLuongMuon_TheoThuThu
 AS
 BEGIN
@@ -10,8 +12,11 @@ BEGIN
     INNER JOIN ACCOUNT_USER AU ON TT.idUser = AU.idUser
     GROUP BY TT.idLibrarian, AU.nameUser;
 END;
+EXEC ThongKeSoLuongMuon_TheoThuThu;
 
 
+-- 20250729 0741 
+-- Added idReason check logic 
 CREATE OR ALTER PROC ThemTienPhatMoi
     @requiredFee FLOAT,
     @progressFee FLOAT,
@@ -25,6 +30,11 @@ BEGIN
         RETURN;
     END;
 
+    IF NOT EXISTS (SELECT 1 FROM MUONTRA WHERE idBorrow = @idBorrow)
+    BEGIN
+        RAISERROR(N'Mã mượn trả không tồn tại!', 16, 1);
+        RETURN;
+    END;
     INSERT INTO TIENPHAT (requiredFee, progressFee, idBorrow)
     VALUES (@requiredFee, @progressFee, @idBorrow);
 
@@ -34,6 +44,8 @@ BEGIN
     VALUES (@newIdFee, @idReason);
 END;
 
+-- 20250729 0743 
+-- NG: Only prints late-returning customers.
 CREATE OR ALTER PROC DanhSachDocGia_MuonQuaHan
 AS
 BEGIN
@@ -50,17 +62,18 @@ BEGIN
     INNER JOIN DOCGIA DG ON TV.idCard = DG.idCard
     INNER JOIN ACCOUNT_USER AU ON DG.idUser = AU.idUser
     WHERE BB.statusBookBorrow = N'Trễ hạn'
-       OR BB.returnDate < CAST(GETDATE() AS DATE);
+       OR DATEDIFF(DAY, BB.returnDate, MT.deadlineDate) < 0;
 END;
-
+-- 20250729 0813 
+-- Fix Late-borrow logic
 CREATE OR ALTER PROC CapNhatTrangThaiQuaHan
 AS
 BEGIN
     UPDATE BB
     SET statusBookBorrow = N'Trễ hạn'
-    FROM JOIN_BOOKBORROW BB
-    WHERE BB.returnDate < CAST(GETDATE() AS DATE)
-          AND BB.statusBookBorrow != N'Trễ hạn';
+    FROM JOIN_BOOKBORROW BB 
+    WHERE DATEDIFF(DAY, (SELECT MT.deadlineDate FROM MUONTRA MT WHERE MT.idBorrow = BB.idBorrow), BB.returnDate) < 0
+		AND BB.statusBookBorrow != N'Trễ hạn';
 END;
 
 --TEST
@@ -111,3 +124,4 @@ EXEC ThongKeSoLuongMuon_TheoThuThu
 EXEC ThemTienPhatMoi 15000, 5000, 1, 1
 
 EXEC DanhSachDocGia_MuonQuaHan
+EXEC CapNhatTrangThaiQuaHan
