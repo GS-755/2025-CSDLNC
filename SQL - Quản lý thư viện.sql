@@ -202,7 +202,7 @@ BEGIN
 		FROM Tag 
 		WHERE idTag = @id
 	) BEGIN 
-		Raiserror(N'Queried idTag does not exqist!', 16, 1);
+		Raiserror(N'Queried idTag does not exist!', 16, 1);
 		RETURN;
 	END;
 	DECLARE @cnt_joinlst INT; 
