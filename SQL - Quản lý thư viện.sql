@@ -103,7 +103,7 @@ CREATE TABLE THUTHU (
 CREATE TABLE MUONTRA (
 	idBorrow INT NOT NULL IDENTITY(1,1),
 	dateBorrow DATE NOT NULL DEFAULT GETDATE(),
-	deadlineDate DATE NOT NULL,
+	deadlineDate DATE,
 	statusBorrow NVARCHAR(100) NOT NULL,
 	idCard CHAR(12) NOT NULL,
 	idLibrarian INT,
