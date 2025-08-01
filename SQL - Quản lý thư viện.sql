@@ -233,14 +233,14 @@ BEGIN
 END;
 
 --SACH
-CREATE PROC AddBook @id CHAR(4), @name NVARCHAR(100), @type NVARCHAR(100), @author NVARCHAR(100), @publisher NVARCHAR(100), @format NVARCHAR(20), @image VARBINARY(MAX)
+CREATE OR ALTER PROC AddBook @id CHAR(4), @name NVARCHAR(100), @type NVARCHAR(100), @author NVARCHAR(100), @publisher NVARCHAR(100), @format NVARCHAR(20), @image VARBINARY(MAX)
 AS
 BEGIN
 	INSERT INTO SACH
-	SELECT @id, @name, @type, @author, @publisher, GETDATE(), @format, NULL, 'CREATED', @image);
+	VALUES(@id, @name, @type, @author, @publisher, GETDATE(), @format, NULL, 'CREATED', @image)
 END;
 
-CREATE PROC DeleteBook @id CHAR(4)
+CREATE OR ALTER PROC DeleteBook @id CHAR(4)
 AS
 BEGIN
 	DELETE FROM SACH
