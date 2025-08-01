@@ -26,13 +26,13 @@ CREATE OR ALTER PROC sp_updatememberstatus
 AS BEGIN 
 	-- Case đang mượn sách 
 	UPDATE DOCGIA 
-		SET StatusMember = N'Bình thường'
+		SET StatusMember = N'Đang mượn'
 	SELECT mt.idBorrow
 	FROM THETHUVIEN ttv 
 		JOIN MUONTRA mt ON (ttv.idCard = mt.idCard) 
 		JOIN DOCGIA d ON (d.idCard = ttv.idCard)
 		JOIN JOIN_BOOKBORROW jbb ON (mt.idBorrow = jbb.idBorrow)
-	WHERE mt.statusBorrow = N'Đang mượn' OR jbb.statusBookBorrow = N'Đang mượn';
+	WHERE mt.statusBorrow = N'Bình thường' OR jbb.statusBookBorrow = N'Đang mượn';
 	-- Case trễ hạn mượn sách 
 	UPDATE DOCGIA 
 		SET StatusMember = N'Trễ hạn mượn sách'
